@@ -1,0 +1,352 @@
+{
+  "id": "82bef911-0487-4c17-98a8-b82e62897d23",
+  "revision": 0,
+  "last_node_id": 27,
+  "last_link_id": 43,
+  "nodes": [
+    {
+      "id": 5,
+      "type": "DWPreprocessor",
+      "pos": [
+        15.110761642456055,
+        1900.8651123046875
+      ],
+      "size": [
+        294.72265625,
+        222
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "POSE_KEYPOINT",
+          "type": "POSE_KEYPOINT",
+          "links": [
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DWPreprocessor",
+        "cnr_id": "comfyui_controlnet_aux",
+        "ver": "83463c2e4b04e729268e57f638b4212e0da4badc",
+        "widget_ue_connectable": {
+          "detect_hand": true,
+          "detect_body": true,
+          "detect_face": true,
+          "resolution": true,
+          "bbox_detector": true,
+          "pose_estimator": true,
+          "scale_stick_for_xinsr_cn": true
+        }
+      },
+      "widgets_values": [
+        "disable",
+        "enable",
+        "enable",
+        512,
+        "yolox_l.onnx",
+        "dw-ll_ucoco_384_bs5.torchscript.pt",
+        "disable"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "PreviewImage",
+      "pos": [
+        599.9398193359375,
+        1703.6693115234375
+      ],
+      "size": [
+        140,
+        246
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 26,
+      "type": "PreviewAny",
+      "pos": [
+        675.9271850585938,
+        1993.6842041015625
+      ],
+      "size": [
+        210,
+        88
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 38
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 27,
+      "type": "PreviewAny",
+      "pos": [
+        671.7185668945312,
+        2120.233154296875
+      ],
+      "size": [
+        210,
+        88
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 39
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 25,
+      "type": "OpenPose - Get direction",
+      "pos": [
+        400.66278076171875,
+        2029.708984375
+      ],
+      "size": [
+        197.87167358398438,
+        46
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pose_kps",
+          "type": "POSE_KEYPOINT",
+          "link": 37
+        }
+      ],
+      "outputs": [
+        {
+          "name": "direction",
+          "type": "STRING",
+          "links": [
+            38
+          ]
+        },
+        {
+          "name": "direction_code",
+          "type": "INT",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "OpenPose - Get direction"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 23,
+      "type": "JWImageResizeByLongerSide",
+      "pos": [
+        21.34976577758789,
+        1773.6903076171875
+      ],
+      "size": [
+        283.5611267089844,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 30
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JWImageResizeByLongerSide"
+      },
+      "widgets_values": [
+        512,
+        "bicubic"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "LoadImage",
+      "pos": [
+        -293.60198974609375,
+        1777.8641357421875
+      ],
+      "size": [
+        280.748046875,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            30
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "widget_ue_connectable": {
+          "image": true,
+          "upload": true
+        }
+      },
+      "widgets_values": [
+        "woman-serious-portrait-closeup-thinking-260nw-2311883637.webp",
+        "image"
+      ]
+    }
+  ],
+  "links": [
+    [
+      4,
+      5,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      30,
+      12,
+      0,
+      23,
+      0,
+      "IMAGE"
+    ],
+    [
+      31,
+      23,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      37,
+      5,
+      1,
+      25,
+      0,
+      "POSE_KEYPOINT"
+    ],
+    [
+      38,
+      25,
+      0,
+      26,
+      0,
+      "*"
+    ],
+    [
+      39,
+      25,
+      1,
+      27,
+      0,
+      "*"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.51,
+      "offset": [
+        930.3134181598373,
+        -1476.997926150171
+      ]
+    },
+    "frontendVersion": "1.21.6",
+    "node_versions": {
+      "comfyui_controlnet_aux": "83463c2e4b04e729268e57f638b4212e0da4badc",
+      "comfy-core": "0.3.39",
+      "comfyui-various": "5bd85aaf7616878471469c4ec7e11bbd0cef3bf2"
+    },
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
