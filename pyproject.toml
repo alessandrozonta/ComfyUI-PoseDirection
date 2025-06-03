@@ -1,0 +1,15 @@
+[project]
+name = "posedirection"
+description = "This custom node for ComfyUI analyzes OpenPose keypoints to determine if a person in an image is facing forward, showing their left side, or their right side."
+version = "1.0.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/alessandrozonta/ComfyUI-PoseDirection"
+#  Used by Comfy Registry https://registry.comfy.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-PoseDirection"
+Icon = ""
+includes = []
