@@ -28,93 +28,105 @@ class DirectionNode:
             return ("missing keypoints", -1)
             
         person = pose_kps[0]
-        # print(person)
-        # Extract pose keypoints from the actual structure
-        if 'people' not in person or not person['people'] or 'pose_keypoints_2d' not in person['people'][0]:
-            return ("missing keypoints", -1)
-        pose = person['people'][0]['pose_keypoints_2d']
-        if len(pose) < 21:
-            return ("missing keypoints", -1)
-        # COCO indices
-        nose = (pose[0], pose[1], pose[2])
-        left_shoulder = (pose[15], pose[16], pose[17])
-        right_shoulder = (pose[18], pose[19], pose[20])
         
-        # Check if we have enough keypoints to make a determination
-        if not all([right_shoulder, left_shoulder, nose]):
+        # Extract face keypoints
+        if 'people' not in person or not person['people'] or 'face_keypoints_2d' not in person['people'][0]:
             return ("missing keypoints", -1)
             
-        # Calculate the center point between shoulders
-        shoulder_center_x = (right_shoulder[0] + left_shoulder[0]) / 2
-        nose_offset_x = nose[0] - shoulder_center_x
-        shoulder_distance = abs(right_shoulder[0] - left_shoulder[0])
-        shoulder_y_diff = abs(right_shoulder[1] - left_shoulder[1])
-        # Robust thresholds
-        forward_x_threshold = 0.3 * shoulder_distance
-        forward_y_margin = 0.4 * abs(right_shoulder[1] - left_shoulder[1] + 1)  # avoid div by zero
-        # Shoulders are roughly level if y-diff is less than 20% of shoulder width
-        shoulders_level = shoulder_y_diff < 0.2 * shoulder_distance
-        # Nose y is between shoulders (with margin)
-        nose_between_shoulders = (min(left_shoulder[1], right_shoulder[1]) - forward_y_margin <= nose[1] <= max(left_shoulder[1], right_shoulder[1]) + forward_y_margin)
-        if abs(nose_offset_x) <= forward_x_threshold and shoulders_level and nose_between_shoulders:
-            return ("forward", 0)
-        
-        # Try to use face keypoints for more robust forward detection
-        face_kps = person['people'][0].get('face_keypoints_2d', None)
-        face_forward = False
-        if face_kps and len(face_kps) >= 68 * 3:  # 68-point face model
-            # Indices for left/right eye and mouth corners in 68-point model
-            # left_eye: 36-41, right_eye: 42-47, left_mouth: 48, right_mouth: 54
+        face_kps = person['people'][0]['face_keypoints_2d']
+        if len(face_kps) < 12:  # Minimum required face keypoints
+            return ("missing keypoints", -1)
+            
+        # Extract key face points (assuming 68-point model)
+        if len(face_kps) >= 68 * 3:  # 68-point face model
+            # Get left and right eye points
             left_eye_x = sum(face_kps[i*3] for i in range(36, 42)) / 6
             right_eye_x = sum(face_kps[i*3] for i in range(42, 48)) / 6
+            # Get nose tip
+            nose_tip_x = face_kps[30*3]  # Nose tip is point 30
+            # Get mouth corners
             left_mouth_x = face_kps[48*3]
             right_mouth_x = face_kps[54*3]
-            # Midpoints
-            eye_mid_x = (left_eye_x + right_eye_x) / 2
-            mouth_mid_x = (left_mouth_x + right_mouth_x) / 2
-            # Symmetry checks
-            nose_x = nose[0]
-            eye_sym = abs(nose_x - eye_mid_x)
-            mouth_sym = abs(nose_x - mouth_mid_x)
-            eye_dist = abs(left_eye_x - right_eye_x)
-            mouth_dist = abs(left_mouth_x - right_mouth_x)
-            # If nose is close to midpoints and eyes/mouth are not too far apart, likely forward
-            if eye_sym < 0.15 * eye_dist and mouth_sym < 0.15 * mouth_dist:
-                face_forward = True
-        elif face_kps and len(face_kps) >= 12:  # fallback for smaller face models
+            # Get jaw points
+            left_jaw_x = face_kps[0*3]  # Left jaw point
+            right_jaw_x = face_kps[16*3]  # Right jaw point
+            # Get eyebrow points
+            left_eyebrow_x = sum(face_kps[i*3] for i in range(17, 22)) / 5
+            right_eyebrow_x = sum(face_kps[i*3] for i in range(22, 27)) / 5
+        else:  # Fallback for smaller face models
             # Use first two pairs as eyes, next two as mouth corners
             left_eye_x = face_kps[0]
             right_eye_x = face_kps[3]
-            left_mouth_x = face_kps[6]
-            right_mouth_x = face_kps[9]
-            eye_mid_x = (left_eye_x + right_eye_x) / 2
-            mouth_mid_x = (left_mouth_x + right_mouth_x) / 2
-            nose_x = nose[0]
-            eye_sym = abs(nose_x - eye_mid_x)
-            mouth_sym = abs(nose_x - mouth_mid_x)
-            eye_dist = abs(left_eye_x - right_eye_x)
-            mouth_dist = abs(left_mouth_x - right_mouth_x)
-            if eye_sym < 0.15 * eye_dist and mouth_sym < 0.15 * mouth_dist:
-                face_forward = True
-        # If face symmetry says forward, return forward
-        if face_forward:
-            return ("forward", 0)
+            nose_tip_x = face_kps[6]  # Assuming nose is point 6
+            left_mouth_x = face_kps[9]
+            right_mouth_x = face_kps[12]
+            left_jaw_x = face_kps[0]  # Use eye point as jaw point
+            right_jaw_x = face_kps[3]  # Use eye point as jaw point
+            left_eyebrow_x = face_kps[0]  # Use eye point as eyebrow point
+            right_eyebrow_x = face_kps[3]  # Use eye point as eyebrow point
+            
+        # Calculate face symmetry metrics
+        eye_mid_x = (left_eye_x + right_eye_x) / 2
+        mouth_mid_x = (left_mouth_x + right_mouth_x) / 2
+        jaw_mid_x = (left_jaw_x + right_jaw_x) / 2
+        eyebrow_mid_x = (left_eyebrow_x + right_eyebrow_x) / 2
         
-        # Calculate the angle between shoulders
-        shoulder_angle = abs(right_shoulder[0] - left_shoulder[0])
-        if shoulder_angle < 20:
-            return ("angle too small", -1)
-        right_visibility = abs(right_shoulder[0] - nose[0])
-        left_visibility = abs(left_shoulder[0] - nose[0])
-        if nose_offset_x > 0 and right_visibility > left_visibility:
+        # Calculate face center using all features
+        face_center_x = (eye_mid_x + mouth_mid_x + jaw_mid_x + eyebrow_mid_x) / 4
+        
+        # Calculate symmetry metrics for each feature
+        eye_symmetry = abs(nose_tip_x - eye_mid_x)
+        mouth_symmetry = abs(nose_tip_x - mouth_mid_x)
+        jaw_symmetry = abs(nose_tip_x - jaw_mid_x)
+        eyebrow_symmetry = abs(nose_tip_x - eyebrow_mid_x)
+        
+        # Calculate feature distances
+        eye_distance = abs(left_eye_x - right_eye_x)
+        mouth_distance = abs(left_mouth_x - right_mouth_x)
+        jaw_distance = abs(left_jaw_x - right_jaw_x)
+        eyebrow_distance = abs(left_eyebrow_x - right_eyebrow_x)
+        
+        # Calculate average feature distance for normalization
+        avg_feature_distance = (eye_distance + mouth_distance + jaw_distance + eyebrow_distance) / 4
+        
+        # Calculate nose offset from face center
+        nose_offset = nose_tip_x - face_center_x
+        nose_offset_ratio = abs(nose_offset) / avg_feature_distance
+        
+        # Calculate symmetry scores (0 to 1, where 1 is perfectly symmetric)
+        symmetry_scores = [
+            eye_symmetry / eye_distance,
+            mouth_symmetry / mouth_distance,
+            jaw_symmetry / jaw_distance,
+            eyebrow_symmetry / eyebrow_distance
+        ]
+        avg_symmetry = sum(symmetry_scores) / len(symmetry_scores)
+        
+        # Calculate feature alignment scores
+        feature_alignments = [
+            abs(eye_mid_x - face_center_x) / eye_distance,
+            abs(mouth_mid_x - face_center_x) / mouth_distance,
+            abs(jaw_mid_x - face_center_x) / jaw_distance,
+            abs(eyebrow_mid_x - face_center_x) / eyebrow_distance
+        ]
+        avg_alignment = sum(feature_alignments) / len(feature_alignments)
+        
+        # Thresholds based on example data analysis
+        symmetry_threshold = 0.15  # 15% deviation allowed for forward-facing
+        alignment_threshold = 0.12  # 12% deviation allowed for feature alignment
+        offset_threshold = 0.18    # 18% of average feature distance
+        
+        # Check if face is symmetric and well-aligned (forward facing)
+        if (avg_symmetry < symmetry_threshold and 
+            avg_alignment < alignment_threshold and 
+            nose_offset_ratio < offset_threshold):
+            return ("forward", 0)
+            
+        # Determine left/right based on nose position relative to face center
+        if nose_offset > 0:
             return ("right", 2)
-        elif nose_offset_x < 0 and left_visibility > right_visibility:
-            return ("left", 1)
         else:
-            if right_shoulder[0] > left_shoulder[0]:
-                return ("right", 2)
-            else:
-                return ("left", 1)
+            return ("left", 1)
 
 
 NODE_CLASS_MAPPINGS = {
